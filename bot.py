@@ -1,5 +1,4 @@
-cd ~/super_ai_bot
-cat > bot.py <<'PY'
+
 import os
 import sqlite3
 import requests
