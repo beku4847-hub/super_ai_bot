@@ -2,7 +2,13 @@
 import os
 import requests
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters
+)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -11,36 +17,36 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        await update.message.reply_text("Gemini API kaliti topilmadi.")
+        return
 
     try:
-        url = "https://generativelanguage.googleapis.com/v1beta/interactions"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent"
 
         response = requests.post(
             url,
             headers={
-                "x-goog-api-key": os.getenv("GEMINI_API_KEY"),
+                "x-goog-api-key": api_key,
                 "Content-Type": "application/json"
             },
             json={
-                "model": "gemini-3.5-flash-lite",
-                "input": user_text
+                "contents": [{
+                    "role": "user",
+                    "parts": [{"text": user_text}]
+                }]
             },
             timeout=60
         )
 
-        response.raise_for_status()
+        if not response.ok:
+            print("GEMINI XATOSI:", response.status_code, response.text)
+            response.raise_for_status()
+
         data = response.json()
-
-        answer = data.get("output_text", "")
-
-        if not answer:
-            for step in data.get("steps", []):
-                for item in step.get("content", []):
-                    if item.get("type") == "text":
-                        answer += item.get("text", "")
-
-        if not answer:
-            answer = "AI javob qaytarmadi."
+        answer = data["candidates"][0]["content"]["parts"][0]["text"]
 
         await update.message.reply_text(answer[:4000])
 
