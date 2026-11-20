@@ -26,20 +26,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent"
 
-        response = requests.post(
-            url,
-            headers={
-                "x-goog-api-key": api_key,
-                "Content-Type": "application/json"
-            },
-            json={
-                "contents": [{
-                    "role": "user",
-                    "parts": [{"text": user_text}]
-                }]
-            },
-            timeout=60
-        )
+        print("GEMINI STATUS:", response.status_code)
+print("GEMINI BODY:", response.text[:1000])
 
         if not response.ok:
             print("GEMINI XATOSI:", response.status_code, response.text)
